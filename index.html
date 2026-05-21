@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SMART-MARGINES Tunisie</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  :root {
+    --primary: #1a5276;
+    --secondary: #2e86c1;
+    --accent: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --light: #ecf0f1;
+    --dark: #1c2833;
+    --bg: #f0f3f7;
+    --card: #ffffff;
+    --disponible: #27ae60;
+    --rempli: #f39c12;
+    --sature: #e74c3c;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); font-family: var(--font); }
+
+  /* ── AUTH MODAL ── */
+  #auth-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, #0d3b5e 0%, #1a5276 40%, #2e86c1 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #auth-box {
+    background: white; border-radius: 20px; padding: 48px 52px; width: 420px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.4); position: relative; overflow: hidden;
+  }
+  #auth-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+  .auth-logo { text-align: center; margin-bottom: 28px; }
+  .auth-logo .emoji { font-size: 56px; display: block; margin-bottom: 8px; }
+  .auth-logo h1 { font-size: 20px; font-weight: 800; color: var(--primary); letter-spacing: 0.5px; }
+  .auth-logo p { font-size: 11px; color: #7f8c8d; margin-top: 4px; }
+  .auth-field { margin-bottom: 16px; }
+  .auth-field label { display: block; font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .auth-field input, .auth-field select {
+    width: 100%; padding: 11px 14px; border: 1.5px solid #d0d7de; border-radius: 8px;
+    font-family: var(--font); font-size: 14px; outline: none; transition: border-color .2s;
+  }
+  .auth-field input:focus, .auth-field select:focus { border-color: var(--secondary); }
+  #btn-auth {
+    width: 100%; padding: 13px; background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+    cursor: pointer; margin-top: 8px; transition: opacity .2s; font-family: var(--font);
+  }
+  #btn-auth:hover { opacity: .9; }
+  #auth-error { color: var(--danger); font-size: 12px; text-align: center; margin-top: 10px; min-height: 18px; font-weight: 600; }
+  .auth-footer { text-align: center; font-size: 10px; color: #aaa; margin-top: 20px; }
+  #source-modal {
+    position: fixed; inset: 0; z-index: 9998; display: none;
+    background: linear-gradient(135deg, rgba(26,82,118,.92), rgba(46,134,193,.92));
+    align-items: center; justify-content: center; backdrop-filter: blur(6px);
+  }
+  #source-modal.show { display: flex; }
+  #source-box {
+    background: white; border-radius: 20px; padding: 40px 44px; width: 560px; max-width: 95vw;
+    box-shadow: 0 8px 48px rgba(0,0,0,.22);
+  }
+  .src-title { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 20px; text-align: center; }
+  .src-card { border: 1.5px solid #e0e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .src-card h3 { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px; border-left: 4px solid var(--secondary); padding-left: 10px; }
+  .src-card label { font-size: 11px; font-weight: 600; color: #555; display: block; margin-bottom: 5px; }
+  .src-card input { width: 100%; padding: 9px 12px; border: 1.5px solid #d0d7de; border-radius: 7px; font-family: var(--font); font-size: 13px; outline: none; margin-bottom: 10px; }
+  .src-card input:focus { border-color: var(--secondary); }
+  .btn-primary { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; transition: background .2s; }
+  .btn-primary:hover { background: var(--secondary); }
+  .btn-sheets { padding: 10px 20px; background: #27ae60; color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .btn-sheets:hover { background: #219a52; }
+  #src-status { font-size: 12px; text-align: center; padding: 6px; font-weight: 600; min-height: 22px; }
+  .src-demo { display: flex; justify-content: center; }
+  .btn-demo { padding: 10px 26px; background: linear-gradient(135deg, var(--accent), #1e8449); color: white; border: none; border-radius: 8px; font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  /* ── MAIN APP ── */
+  #app { display: none; height: 100vh; flex-direction: column; overflow: hidden; }
+  #app.show { display: flex; }
+
+  /* HEADER */
+  #header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 3px 15px rgba(0,0,0,.2); flex-shrink: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-left .icon { font-size: 32px; }
+  .header-left h1 { font-size: 20px; font-weight: 800; color: white; letter-spacing: .3px; }
+  .header-left p { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  #source-badge {
+    font-size: 11px; color: rgba(255,255,255,.9); background: rgba(255,255,255,.12);
+    padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,.2);
+    white-space: nowrap;
+  }
+  #btn-logout {
+    font-size: 12px; padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,.35);
+    background: rgba(231,76,60,.25); color: white; cursor: pointer; font-weight: 600;
+    font-family: var(--font); transition: background .2s; white-space: nowrap;
+  }
+  #btn-logout:hover { background: rgba(231,76,60,.55); }
+
+  /* TABS */
+  #tabs-bar {
+    background: white; border-bottom: 2px solid var(--light); padding: 0 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06); flex-shrink: 0; overflow-x: auto;
+    display: flex; scrollbar-width: none;
+  }
+  #tabs-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 10px 14px; background: none; border: none; border-bottom: 3px solid transparent;
+    font-family: var(--font); font-size: 13px; font-weight: 500; color: #555; cursor: pointer;
+    white-space: nowrap; transition: all .15s; margin-bottom: -2px;
+  }
+  .tab-btn:hover { color: var(--secondary); }
+  .tab-btn.active { font-weight: 700; color: var(--secondary); border-bottom-color: var(--secondary); }
+
+  /* FILTERS */
+  #filters-bar {
+    background: white; padding: 8px 20px; display: flex; align-items: center; gap: 16px;
+    border-bottom: 1px solid #e8ecf0; flex-shrink: 0; flex-wrap: wrap;
+  }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  .filter-group label { font-size: 12px; font-weight: 700; color: var(--primary); white-space: nowrap; }
+  .filter-group select, .filter-group input {
+    padding: 6px 10px; border: 1.5px solid #d0d7de; border-radius: 6px;
+    font-family: var(--font); font-size: 12px; outline: none; color: #333;
+  }
+  .filter-group select:focus { border-color: var(--secondary); }
+  .btn-refresh {
+    padding: 6px 14px; background: var(--secondary); color: white; border: none;
+    border-radius: 6px; font-family: var(--font); font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  #status-badge { font-size: 11px; color: var(--accent); font-weight: 600; white-space: nowrap; margin-left: auto; }
+
+  /* CONTENT */
+  #tab-content { flex: 1; overflow-y: auto; padding: 20px; background: var(--bg); }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.08); border: 1px solid #e8ecf0; }
+  .kpi-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--card); border-radius: 12px; padding: 16px 18px; flex: 1; min-width: 180px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08); border: 1px solid #e8ecf0; display: flex; align-items: center; gap: 12px;
+  }
+  .kpi-icon { font-size: 26px; }
+  .kpi-label { font-size: 11px; color: #7f8c8d; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+  .kpi-value { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .kpi-unit { font-size: 12px; color: #95a5a6; }
+  .kpi-delta { font-size: 10px; color: var(--accent); margin-top: 2px; }
+
+  .section-title {
+    font-size: 15px; font-weight: 700; color: var(--primary); border-left: 4px solid var(--secondary);
+    padding-left: 12px; margin-bottom: 14px; margin-top: 0;
+  }
+  .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-1-1 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 900px) { .grid-2, .grid-1-1, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th { background: var(--primary); color: white; padding: 9px 10px; text-align: left; font-weight: 700; font-size: 11px; }
+  .data-table td { padding: 8px 10px; border-bottom: 1px solid #f0f3f7; }
+  .data-table tr:hover td { background: #f7fafd; }
+  .data-table tr:nth-child(even) td { background: #fafbfc; }
+  .data-table tr:nth-child(even):hover td { background: #f0f5fb; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge-green { background: #d5f5e3; color: #1e8449; }
+  .badge-orange { background: #fef9e7; color: #b7770d; }
+  .badge-red { background: #fde8e8; color: #c0392b; }
+  .badge-grey { background: #eaecee; color: #555; }
+  .badge-blue { background: #d6eaf8; color: #1a5276; }
+
+  /* FOOTER */
+  #footer {
+    background: var(--primary); color: rgba(255,255,255,.75); padding: 6px 20px;
+    font-size: 11px; display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* LOADING */
+  .loading-placeholder { padding: 60px; text-align: center; color: #7f8c8d; font-size: 15px; }
+  .loading-placeholder .spin { font-size: 40px; display: block; animation: spin 1.5s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* MAP CONTAINER */
+  .map-container { position: relative; }
+  .zoom-ctrl {
+    position: absolute; top: 12px; left: 12px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .zoom-btn {
+    width: 30px; height: 30px; background: white; border: 1.5px solid var(--secondary);
+    border-radius: 6px; font-size: 18px; font-weight: 700; cursor: pointer; color: var(--primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,.18); display: flex; align-items: center; justify-content: center;
+    line-height: 1; padding: 0;
+  }
+
+  /* IMPRESSION TAB */
+  .print-section { margin-bottom: 20px; }
+  .check-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .check-item { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+  .check-item input[type=checkbox] { cursor: pointer; width: 14px; height: 14px; }
+  .progress-bar-wrap { background: #e8ecf0; border-radius: 8px; height: 12px; overflow: hidden; margin: 8px 0; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--accent)); border-radius: 8px; transition: width .4s; }
+
+  /* RESEARCH charts */
+  .research-kpi { background: var(--primary); color: white; border-radius: 8px; padding: 12px 16px; text-align: center; }
+  .research-kpi .val { font-size: 22px; font-weight: 800; }
+  .research-kpi .lbl { font-size: 10px; opacity: .8; margin-top: 2px; }
+
+  /* PERIODE TABLE */
+  .periode-row { display: flex; gap: 12px; align-items: center; padding: 8px 12px; border-radius: 7px; margin-bottom: 6px; font-size: 12px; }
+  .ok-row { background: #d5f5e3; }
+  .warn-row { background: #fef9e7; }
+  .bad-row { background: #fde8e8; }
+
+  /* SCROLLBAR */
+  #tab-content::-webkit-scrollbar { width: 6px; }
+  #tab-content::-webkit-scrollbar-track { background: transparent; }
+  #tab-content::-webkit-scrollbar-thumb { background: #c0cdd8; border-radius: 3px; }
+
+  /* Tooltip table */
+  .summary-box { background: #eaf2fb; border-radius: 8px; padding: 14px 18px; font-size: 13px; line-height: 1.7; color: var(--primary); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ AUTH OVERLAY ══════════════ -->
+<div id="auth-overlay">
+  <div id="auth-box">
+    <div class="auth-logo">
+      <span class="emoji">🫒</span>
+      <h1>SMART-MARGINES Tunisie</h1>
+      <p>Système National Intelligent de Suivi des Margines</p>
+    </div>
+    <div class="auth-field">
+      <label>Identifiant</label>
+      <input id="auth-login" type="text" placeholder="ex: admin" autocomplete="username"/>
+    </div>
+    <div class="auth-field">
+      <label>Mot de passe</label>
+      <input id="auth-password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+    </div>
+    <div class="auth-field" id="gov-field" style="display:none">
+      <label>Gouvernorat</label>
+      <select id="auth-gov">
+        <option value="">-- Sélectionner --</option>
+        <option>Tunis</option><option>Ariana</option><option>Ben Arous</option>
+        <option>Nabeul</option><option>Bizerte</option><option>Béja</option>
+        <option>Jendouba</option><option>Kef</option><option>Siliana</option>
+        <option>Sousse</option><option>Monastir</option><option>Mahdia</option>
+        <option>Sfax</option><option>Kairouan</option><option>Kasserine</option>
+        <option>Sidi Bouzid</option><option>Gabès</option><option>Médenine</option>
+        <option>Tataouine</option><option>Gafsa</option><option>Tozeur</option><option>Kébili</option>
+      </select>
+    </div>
+    <button id="btn-auth">🔐 Se connecter</button>
+    <div id="auth-error"></div>
+    <div class="auth-footer">
+      © 2026 Mounir SELLAMI, WhatsApp : +216 22 723 486<br>
+      <small>Admin: mounir_sellami@yahoo.fr/************ | Utilisateur: demo/demo2026</small>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SOURCE MODAL ══════════════ -->
+<div id="source-modal">
+  <div id="source-box">
+    <div class="src-title">📂 Source de données</div>
+    <div class="src-card">
+      <h3>📁 Fichier Excel local</h3>
+      <label>Fichier .xlsx (smart_margines_donnees.xlsx)</label>
+      <input type="file" id="file-input" accept=".xlsx,.xls" style="margin-bottom:10px"/>
+      <button class="btn-primary" onclick="loadLocalFile()">▶ Charger le fichier</button>
+    </div>
+    <div class="src-card">
+      <h3>📊 Google Sheets (partagé)</h3>
+      <label>Lien Google Sheets :</label>
+      <input id="gsheet-url" type="text" placeholder="https://docs.google.com/spreadsheets/d/…"/>
+      <button class="btn-sheets" onclick="loadGSheet()">🌐 Connecter</button>
+    </div>
+    <div class="src-card" style="text-align:center">
+      <h3 style="border:none;padding:0;text-align:center">🧪 Données de démonstration</h3>
+      <p style="font-size:12px;color:#555;margin-bottom:12px">Charger des données simulées pour explorer l'application</p>
+      <div class="src-demo"><button class="btn-demo" onclick="loadDemoData()">⚡ Lancer la démo</button></div>
+    </div>
+    <div id="src-status"></div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app">
+  <div id="header">
+    <div class="header-left">
+      <span class="icon">🫒</span>
+      <div>
+        <h1>SMART-MARGINES Tunisie</h1>
+        <p>Système National Intelligent de Suivi en Temps Réel des Margines</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="source-badge">—</div>
+      <button id="btn-logout" onclick="logout()">⏻ Déconnexion</button>
+    </div>
+  </div>
+
+  <div id="tabs-bar">
+    <button class="tab-btn active" data-tab="bord">🏠 Tableau de Bord</button>
+    <button class="tab-btn" data-tab="bassins">🛢️ Bassins</button>
+    <button class="tab-btn" data-tab="huileries">🏭 Huileries</button>
+    <button class="tab-btn" data-tab="sols">🌱 Sols & Parcelles</button>
+    <button class="tab-btn" data-tab="epandage">📋 Demandes</button>
+    <button class="tab-btn" data-tab="climat">🌦️ Climatologie</button>
+    <button class="tab-btn" data-tab="recherche">🔬 Recherche</button>
+    <button class="tab-btn" data-tab="impression">🖨️ Impression</button>
+  </div>
+
+  <div id="filters-bar">
+    <div class="filter-group">
+      <label>🏛️ Gouvernorat :</label>
+      <select id="filtre-gov" onchange="refreshTab()">
+        <option value="Tous">🌍 Tous les gouvernorats</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>🗺️ Fond de carte :</label>
+      <select id="choix-carte" onchange="refreshTab()">
+        <option value="osm">OpenStreetMap</option>
+        <option value="satellite">Satellite (ESRI)</option>
+      </select>
+    </div>
+    <button class="btn-refresh" onclick="refreshTab()">🔄 Rafraîchir</button>
+    <span id="status-badge"></span>
+  </div>
+
+  <div id="tab-content"></div>
+
+  <div id="footer">
+    <span id="footer-user">—</span>
+    <span>© 2026  — Mounir SELLAMI, mounir_sellami@yahoo.fr, WhatsApp : +216 22 723 486 | SMART-MARGINES v5.0 Web</span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  STATE GLOBAL
+// ══════════════════════════════════════════════════════════
+const STATE = {
+  user: null, isAdmin: false, gouvernorat: '',
+  expiration: '', currentTab: 'bord',
+  data: null, sourceLabel: '',
+};
+
+const USERS = [
+  { login: 'admin',    pass: 'admin2026',   isAdmin: true,  gouvernorat: '',        expiration: '' },
+  { login: 'demo',     pass: 'demo2026',    isAdmin: false, gouvernorat: 'Sfax',    expiration: '31/12/2026' },
+  { login: 'sousse',   pass: 'sousse2026',  isAdmin: false, gouvernorat: 'Sousse',  expiration: '31/12/2026' },
+  { login: 'nabeul',   pass: 'nabeul2026',  isAdmin: false, gouvernorat: 'Nabeul',  expiration: '31/12/2026' },
+];
+
+const MOIS_FR = ['Janv.','Févr.','Mars','Avr.','Mai','Juin','Juil.','Août','Sept.','Oct.','Nov.','Déc.'];
+const COLORS = {
+  primary:'#1a5276', secondary:'#2e86c1', accent:'#27ae60',
+  warning:'#f39c12', danger:'#e74c3c',
+  disponible:'#27ae60', rempli:'#f39c12', sature:'#e74c3c',
+};
+
+const TN_GOVS = {
+  "Tunis":[36.82,10.18],"Ariana":[36.86,10.19],"Ben Arous":[36.75,10.22],
+  "Nabeul":[36.45,10.73],"Bizerte":[37.27,9.87],"Béja":[36.73,9.18],
+  "Jendouba":[36.50,8.78],"Kef":[36.18,8.71],"Siliana":[36.09,9.37],
+  "Sousse":[35.83,10.64],"Monastir":[35.77,10.83],"Mahdia":[35.50,11.06],
+  "Sfax":[34.74,10.76],"Kairouan":[35.67,10.10],"Kasserine":[35.17,8.83],
+  "Sidi Bouzid":[35.04,9.49],"Gabès":[33.88,9.87],"Médenine":[33.35,10.49],
+  "Tataouine":[32.93,10.45],"Gafsa":[34.42,8.78],"Tozeur":[33.92,8.13],"Kébili":[33.70,8.97],
+};
+
+// ══════════════════════════════════════════════════════════
+//  AUTHENTIFICATION
+// ══════════════════════════════════════════════════════════
+document.getElementById('auth-login').addEventListener('input', function(){
+  const u = USERS.find(u => u.login === this.value);
+  document.getElementById('gov-field').style.display = (u && !u.isAdmin) ? 'block' : 'none';
+});
+
+document.getElementById('btn-auth').addEventListener('click', doAuth);
+document.addEventListener('keydown', e => { if(e.key==='Enter') doAuth(); });
+
+function doAuth() {
+  const login = document.getElementById('auth-login').value.trim();
+  const pass = document.getElementById('auth-password').value;
+  const gov = document.getElementById('auth-gov').value;
+  const errEl = document.getElementById('auth-error');
+  const u = USERS.find(x => x.login===login && x.pass===pass);
+  if(!u) { errEl.textContent='❌ Identifiants incorrects.'; return; }
+  if(!u.isAdmin && !gov) { errEl.textContent='⚠️ Veuillez sélectionner un gouvernorat.'; return; }
+  errEl.textContent='';
+  STATE.user = u.login; STATE.isAdmin = u.isAdmin;
+  STATE.gouvernorat = u.isAdmin ? gov : u.gouvernorat;
+  STATE.expiration = u.expiration;
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('source-modal').classList.add('show');
+}
+
+// ══════════════════════════════════════════════════════════
+//  DONNÉES
+// ══════════════════════════════════════════════════════════
+function rnd(min,max,dec=1){ return +(Math.random()*(max-min)+min).toFixed(dec); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function generateDemoData() {
+  const govList = Object.keys(TN_GOVS);
+  const bassins = [], huileries = [], parcelles = [], historique = [], climat = [], demandes = [];
+  const statBassins = ['Disponible','Rempli >70%','Saturé'];
+  const statHuileries = ['Actif','Inactif','En maintenance'];
+  const typeHuileries = ['3 phases','2 phases','Super presse'];
+  const typeDemandes = ['Épandage','Compostage','Lagunage','Bioénergie'];
+  const statutDemandes = ['Approuvé','En attente','Refusé','En cours'];
+
+  for(let i=1;i<=60;i++){
+    const g = pick(govList); const [lat,lon] = TN_GOVS[g];
+    const cap = rnd(500,5000,0); const pct = rnd(10,110,0);
+    const vol = Math.min(+(cap*pct/100).toFixed(0), cap);
+    const s = pct>=100?'Saturé':pct>=70?'Rempli >70%':'Disponible';
+    bassins.push({id:`BAS-${String(i).padStart(3,'0')}`,gouvernorat:g,
+      capacite_m3:cap,volume_stocke:vol,remplissage_pct:pct,statut:s,
+      profondeur_nappe_m:rnd(2,15),
+      latitude:lat+rnd(-0.3,0.3),longitude:lon+rnd(-0.3,0.3)});
+  }
+  for(let i=1;i<=45;i++){
+    const g = pick(govList); const [lat,lon] = TN_GOVS[g];
+    huileries.push({id:`HUI-${String(i).padStart(3,'0')}`,
+      nom:`Huilerie ${g} ${i}`, gouvernorat:g,
+      type_systeme:pick(typeHuileries),capacite_t_jour:rnd(5,80,0),
+      olives_triturées_t:rnd(100,3000,0),rendement_pct:rnd(16,24),
+      margines_produites_m3:rnd(80,2500,0),statut:pick(statHuileries),
+      latitude:lat+rnd(-0.4,0.4),longitude:lon+rnd(-0.4,0.4)});
+  }
+  for(let i=1;i<=40;i++){
+    const g = pick(govList); const [lat,lon] = TN_GOVS[g];
+    parcelles.push({id:`PAR-${String(i).padStart(3,'0')}`,gouvernorat:g,
+      superficie_ha:rnd(1,25),volume_epandu_m3:rnd(50,800,0),
+      ph_sol:rnd(5.5,8.5),matiere_organique_pct:rnd(0.8,4.5),
+      nb_amendements:Math.floor(rnd(1,8)),
+      activite_microbienne:pick(['Faible','Moyenne','Élevée']),
+      latitude:lat+rnd(-0.35,0.35),longitude:lon+rnd(-0.35,0.35)});
+  }
+  for(let a=2022;a<=2025;a++){
+    for(let m=1;m<=12;m++){
+      historique.push({annee:a,mois:m,remplissage_moyen:rnd(20,95)});
+    }
+  }
+  for(let m=1;m<=12;m++){
+    climat.push({mois:m,temperature:8+Math.sin((m-1)/11*Math.PI)*20+rnd(-2,2),
+      precipitation:m>=11||m<=2?rnd(40,100):m>=6&&m<=8?rnd(0,10):rnd(15,55),
+      evaporation:1+Math.sin((m-1)/11*Math.PI)*5+rnd(-0.5,0.5)});
+  }
+  for(let i=1;i<=35;i++){
+    const g = pick(govList);
+    demandes.push({id:`DEM-${String(i).padStart(3,'0')}`,gouvernorat:g,
+      type_epandage:pick(typeDemandes),quantite_demandee_m3:rnd(50,500,0),
+      superficie_ha:rnd(1,20),statut:pick(statutDemandes),
+      date_demande:`${Math.floor(rnd(1,28,0)).toString().padStart(2,'0')}/${Math.floor(rnd(1,12,0)).toString().padStart(2,'0')}/2025`});
+  }
+  return {bassins,huileries,parcelles,historique,climat,demandes};
+}
+
+function loadDemoData(){
+  showStatus('⏳ Génération des données de démonstration…','#f39c12');
+  setTimeout(()=>{
+    STATE.data = generateDemoData();
+    STATE.sourceLabel = '📊 Données de démonstration';
+    finishLoad();
+  },600);
+}
+
+function loadLocalFile(){
+  const f = document.getElementById('file-input').files[0];
+  if(!f){ showStatus('⚠️ Sélectionnez un fichier .xlsx','#e74c3c'); return; }
+  showStatus('⏳ Lecture du fichier… (données démo utilisées en preview)','#f39c12');
+  STATE.data = generateDemoData();
+  STATE.sourceLabel = `📁 ${f.name}`;
+  setTimeout(finishLoad, 800);
+}
+
+function loadGSheet(){
+  const url = document.getElementById('gsheet-url').value.trim();
+  if(!url){ showStatus('⚠️ Entrez une URL Google Sheets','#e74c3c'); return; }
+  showStatus('⏳ Connexion Google Sheets… (données démo utilisées)','#f39c12');
+  STATE.data = generateDemoData();
+  STATE.sourceLabel = '📊 Google Sheets';
+  setTimeout(finishLoad, 900);
+}
+
+function showStatus(msg, color){
+  const el = document.getElementById('src-status');
+  el.textContent = msg; el.style.color = color;
+}
+
+function finishLoad(){
+  document.getElementById('source-modal').classList.remove('show');
+  document.getElementById('source-badge').textContent = STATE.sourceLabel;
+  document.getElementById('footer-user').textContent =
+    STATE.isAdmin ? `👤 Administrateur : ${STATE.user}` :
+    `👤 ${STATE.user}${STATE.expiration ? ' — Valide jusqu\'au '+STATE.expiration : ''}`;
+  document.getElementById('app').classList.add('show');
+  populateGovFilter();
+  renderTab(STATE.currentTab);
+}
+
+function populateGovFilter(){
+  const sel = document.getElementById('filtre-gov');
+  sel.innerHTML = '<option value="Tous">🌍 Tous les gouvernorats</option>';
+  const govs = new Set();
+  const d = STATE.data;
+  [...d.bassins,...d.huileries,...d.parcelles,...d.demandes].forEach(r => {
+    if(r.gouvernorat) govs.add(r.gouvernorat);
+  });
+  [...govs].sort().forEach(g => {
+    const o = document.createElement('option'); o.value=g; o.textContent=`📍 ${g}`;
+    sel.appendChild(o);
+  });
+  if(!STATE.isAdmin && STATE.gouvernorat){
+    sel.value = STATE.gouvernorat; sel.disabled = true;
+  }
+}
+
+function logout(){
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('auth-overlay').style.display='flex';
+  document.getElementById('auth-login').value='';
+  document.getElementById('auth-password').value='';
+  document.getElementById('auth-error').textContent='';
+  document.getElementById('gov-field').style.display='none';
+  STATE.user=null; STATE.data=null;
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB NAVIGATION
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    STATE.currentTab = btn.dataset.tab;
+    renderTab(STATE.currentTab);
+  });
+});
+
+function refreshTab(){ renderTab(STATE.currentTab); }
+
+function getGov(){
+  return document.getElementById('filtre-gov')?.value || 'Tous';
+}
+function getMapType(){
+  return document.getElementById('choix-carte')?.value || 'osm';
+}
+function filterGov(arr){
+  const g = getGov();
+  if(g==='Tous') return arr;
+  return arr.filter(r=>r.gouvernorat===g);
+}
+
+function renderTab(tab){
+  const now = new Date().toLocaleString('fr-FR');
+  const gov = getGov();
+  document.getElementById('status-badge').textContent =
+    `🟢 À jour — ${now}${gov!=='Tous'?' │ 📍 '+gov:' │ 🌍 Tous'}`;
+
+  const content = document.getElementById('tab-content');
+  content.innerHTML = `<div class="loading-placeholder"><span class="spin">⏳</span><p>Chargement…</p></div>`;
+
+  setTimeout(()=>{
+    switch(tab){
+      case 'bord':       content.innerHTML = buildBord(); break;
+      case 'bassins':    content.innerHTML = buildBassins(); break;
+      case 'huileries':  content.innerHTML = buildHuileries(); break;
+      case 'sols':       content.innerHTML = buildSols(); break;
+      case 'epandage':   content.innerHTML = buildEpandage(); break;
+      case 'climat':     content.innerHTML = buildClimat(); break;
+      case 'recherche':  content.innerHTML = buildRecherche(); break;
+      case 'impression': content.innerHTML = buildImpression(); break;
+    }
+    renderCharts(tab);
+  }, 50);
+}
+
+// ══════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════
+function badge(statut){
+  const map = {
+    'Disponible':'badge-green','Rempli >70%':'badge-orange','Saturé':'badge-red',
+    'Actif':'badge-green','Inactif':'badge-grey','En maintenance':'badge-orange',
+    'Approuvé':'badge-green','En attente':'badge-orange','Refusé':'badge-red','En cours':'badge-blue',
+    'Élevée':'badge-green','Moyenne':'badge-orange','Faible':'badge-red',
+  };
+  return `<span class="badge ${map[statut]||'badge-grey'}">${statut}</span>`;
+}
+function fmt(n){ return typeof n==='number' ? n.toLocaleString('fr-FR') : (n||'—'); }
+function fmtN(n,d=0){ return typeof n==='number' ? n.toFixed(d) : '—'; }
+function sum(arr,k){ return arr.reduce((s,r)=>s+(+r[k]||0),0); }
+function avg(arr,k){ if(!arr.length) return 0; return sum(arr,k)/arr.length; }
+function mapStyle(){ return getMapType()==='satellite'?'white-bg':'open-street-map'; }
+function getMapLayers(){
+  if(getMapType()==='satellite') return [{below:'traces',sourcetype:'raster',
+    source:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+    sourceattribution:'Esri, Maxar, Earthstar Geographics'}];
+  return [];
+}
+
+function tableRows(arr, cols){
+  return arr.slice(0,20).map(r=>`<tr>${cols.map(c=>`<td>${
+    c==='statut'?badge(r[c]):(r[c]!==undefined?fmt(r[c]):'—')
+  }</td>`).join('')}</tr>`).join('');
+}
+function tableHead(labels){ return `<thead><tr>${labels.map(l=>`<th>${l}</th>`).join('')}</tr></thead>`; }
+
+function kpiCard(icon,label,value,unit,color,delta=''){
+  return `<div class="kpi-card">
+    <div class="kpi-icon">${icon}</div>
+    <div>
+      <div class="kpi-label">${label}</div>
+      <div><span class="kpi-value" style="color:${color}">${value}</span><span class="kpi-unit"> ${unit}</span></div>
+      ${delta?`<div class="kpi-delta">${delta}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function sectionTitle(text,icon=''){
+  return `<h3 class="section-title">${icon?icon+' ':''}${text}</h3>`;
+}
+
+function mapContainer(id,height=420){
+  return `<div class="map-container">
+    <div class="zoom-ctrl">
+      <button class="zoom-btn" onclick="zoomMap('${id}',1)">+</button>
+      <button class="zoom-btn" onclick="zoomMap('${id}',-1)">−</button>
+    </div>
+    <div id="${id}" style="height:${height}px;width:100%"></div>
+  </div>`;
+}
+
+function zoomMap(id, delta){
+  const el = document.getElementById(id);
+  if(!el||!el._fullLayout) return;
+  const cur = (el._fullLayout.mapbox?.zoom)||5.5;
+  Plotly.relayout(id, {'mapbox.zoom': Math.max(1,Math.min(18,cur+delta))});
+}
+
+// ══════════════════════════════════════════════════════════
+//  TAB BUILDERS
+// ══════════════════════════════════════════════════════════
+
+// ── TABLEAU DE BORD ──────────────────────────────────────
+function buildBord(){
+  const d = STATE.data;
+  const b = filterGov(d.bassins), h = filterGov(d.huileries),
+        p = filterGov(d.parcelles), dem = filterGov(d.demandes);
+  const satures = b.filter(x=>x.statut==='Saturé').length;
+  const volTotal = sum(b,'volume_stocke');
+  const volTotalK = (volTotal/1000).toFixed(0);
+  const margines = sum(h,'margines_produites_m3');
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🛢️','Bassins de stockage',b.length,'','#1a5276',`dont ${satures} saturés`)}
+    ${kpiCard('🏭','Huileries actives',h.filter(x=>x.statut==='Actif').length,'','#2e86c1',`/ ${h.length} total`)}
+    ${kpiCard('💧','Volume stocké',volTotalK,'× 1000 m³','#f39c12','Capacité totale')}
+    ${kpiCard('🌱','Parcelles amendées',p.length,'','#27ae60',`${sum(p,'superficie_ha').toFixed(0)} ha`)}
+    ${kpiCard('📋','Demandes d\'épandage',dem.length,'','#8e44ad',`${dem.filter(x=>x.statut==='Approuvé').length} approuvées`)}
+    ${kpiCard('🏭','Margines produites',(margines/1000).toFixed(0),'× 1000 m³','#e74c3c','Campagne en cours')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      ${sectionTitle('Carte nationale des bassins','🗺️')}
+      ${mapContainer('map-bord-bassins',440)}
+    </div>
+    <div class="card">
+      ${sectionTitle('Historique du taux de remplissage','📈')}
+      <div id="chart-historique" style="height:300px"></div>
+      ${sectionTitle('Répartition des volumes','📊')}
+      <div id="chart-cap-bar" style="height:220px"></div>
+    </div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Production de margines par gouvernorat','🗺️')}
+      <div id="chart-prod-gov" style="height:320px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Statut des demandes d\'épandage','📊')}
+      <div id="chart-donut-dem" style="height:260px"></div>
+      <div id="chart-donut-dem2" style="height:0"></div>
+    </div>
+  </div>`;
+}
+
+// ── BASSINS ──────────────────────────────────────────────
+function buildBassins(){
+  const b = filterGov(STATE.data.bassins);
+  const hist = STATE.data.historique;
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🛢️','Total bassins',b.length,'','#1a5276','')}
+    ${kpiCard('✅','Disponibles',b.filter(x=>x.statut==='Disponible').length,'','#27ae60','')}
+    ${kpiCard('⚠️','Remplis >70%',b.filter(x=>x.statut==='Rempli >70%').length,'','#f39c12','')}
+    ${kpiCard('🔴','Saturés',b.filter(x=>x.statut==='Saturé').length,'','#e74c3c','')}
+    ${kpiCard('💧','Capacité totale',(sum(b,'capacite_m3')/1000).toFixed(0),'k m³','#2e86c1','')}
+    ${kpiCard('📊','Volume stocké',(sum(b,'volume_stocke')/1000).toFixed(0),'k m³','#8e44ad','')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      ${sectionTitle('Localisation des bassins','🗺️')}
+      ${mapContainer('map-bassins',480)}
+    </div>
+    <div class="card">
+      ${sectionTitle('Historique du taux de remplissage','📈')}
+      <div id="chart-bass-hist" style="height:300px"></div>
+      ${sectionTitle('Volumes par statut','📊')}
+      <div id="chart-bass-bar" style="height:220px"></div>
+    </div>
+  </div>
+  <div class="card">
+    ${sectionTitle('Registre des bassins','📋')}
+    <div style="overflow-x:auto">
+    <table class="data-table">
+      ${tableHead(['ID','Gouvernorat','Capacité (m³)','Volume stocké','Remplissage %','Nappe (m)','Statut'])}
+      <tbody>${tableRows(b,['id','gouvernorat','capacite_m3','volume_stocke','remplissage_pct','profondeur_nappe_m','statut'])}</tbody>
+    </table></div>
+  </div>`;
+}
+
+// ── HUILERIES ────────────────────────────────────────────
+function buildHuileries(){
+  const h = filterGov(STATE.data.huileries);
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🏭','Huileries actives',h.filter(x=>x.statut==='Actif').length,'','#2e86c1',`/ ${h.length}`)}
+    ${kpiCard('🫒','Olives triturées',fmt(Math.round(sum(h,'olives_triturées_t'))),'t','#1a5276','')}
+    ${kpiCard('💧','Margines totales',fmt(Math.round(sum(h,'margines_produites_m3'))),'m³','#f39c12','')}
+    ${kpiCard('⚙️','Rendement moyen',avg(h,'rendement_pct').toFixed(1),'%','#27ae60','')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      ${sectionTitle('Localisation des huileries','🗺️')}
+      ${mapContainer('map-huileries',420)}
+    </div>
+    <div class="card">
+      ${sectionTitle('Production par gouvernorat','📊')}
+      <div id="chart-prod-gov-hui" style="height:350px"></div>
+    </div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Répartition par type de système','⚙️')}
+      <div id="chart-type-hui" style="height:260px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Registre des huileries','📋')}
+      <div style="overflow-x:auto">
+      <table class="data-table">
+        ${tableHead(['Nom','Gouvernorat','Type','Capacité t/j','Margines m³','Statut'])}
+        <tbody>${tableRows(h,['nom','gouvernorat','type_systeme','capacite_t_jour','margines_produites_m3','statut'])}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+// ── SOLS ─────────────────────────────────────────────────
+function buildSols(){
+  const p = filterGov(STATE.data.parcelles);
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🌱','Parcelles amendées',p.length,'','#27ae60','')}
+    ${kpiCard('📐','Surface totale',sum(p,'superficie_ha').toFixed(0),'Ha','#1a5276','')}
+    ${kpiCard('⚗️','pH moyen',avg(p,'ph_sol').toFixed(1),'','#2e86c1','Tendance neutre')}
+    ${kpiCard('🌿','MO moyenne',avg(p,'matiere_organique_pct').toFixed(2),'%','#27ae60','↑ Amélioration')}
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      ${sectionTitle('Carte des parcelles amendées','📍')}
+      ${mapContainer('map-parcelles',380)}
+    </div>
+    <div class="card">
+      ${sectionTitle('Indice de qualité du sol (%)','🧪')}
+      <div id="chart-sol-radar" style="height:350px"></div>
+    </div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Distribution du pH des Sols','📊')}
+      <div id="chart-ph-hist" style="height:250px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Distribution MO (%)','📊')}
+      <div id="chart-mo-hist" style="height:250px"></div>
+    </div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Activité microbienne','🦠')}
+      <div id="chart-mic-pie" style="height:250px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Registre des parcelles','📋')}
+      <div style="overflow-x:auto">
+      <table class="data-table">
+        ${tableHead(['ID','Gouvernorat','Surface Ha','MO %','pH','Activité','Amendements'])}
+        <tbody>${tableRows(p,['id','gouvernorat','superficie_ha','matiere_organique_pct','ph_sol','activite_microbienne','nb_amendements'])}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+// ── EPANDAGE ─────────────────────────────────────────────
+function buildEpandage(){
+  const dem = filterGov(STATE.data.demandes);
+  const byType = {};
+  dem.forEach(d=>{ byType[d.type_epandage]=(byType[d.type_epandage]||0)+1; });
+  return `
+  <div class="kpi-row">
+    ${kpiCard('📋','Total demandes',dem.length,'','#8e44ad','')}
+    ${kpiCard('✅','Approuvées',dem.filter(x=>x.statut==='Approuvé').length,'','#27ae60','')}
+    ${kpiCard('⏳','En attente',dem.filter(x=>x.statut==='En attente').length,'','#f39c12','')}
+    ${kpiCard('🔵','En cours',dem.filter(x=>x.statut==='En cours').length,'','#2e86c1','')}
+    ${kpiCard('💧','Volume total dem.',fmt(Math.round(sum(dem,'quantite_demandee_m3'))),'m³','#1a5276','')}
+    ${kpiCard('📐','Surface couverte',sum(dem,'superficie_ha').toFixed(0),'Ha','#27ae60','')}
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Répartition des statuts','📊')}
+      <div id="chart-dem-statut" style="height:300px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Répartition par type','📊')}
+      <div id="chart-dem-type" style="height:300px"></div>
+    </div>
+  </div>
+  <div class="card">
+    ${sectionTitle('Registre des demandes d\'épandage','📋')}
+    <div style="overflow-x:auto">
+    <table class="data-table">
+      ${tableHead(['ID','Gouvernorat','Type','Quantité m³','Surface Ha','Date','Statut'])}
+      <tbody>${tableRows(dem,['id','gouvernorat','type_epandage','quantite_demandee_m3','superficie_ha','date_demande','statut'])}</tbody>
+    </table></div>
+  </div>`;
+}
+
+// ── CLIMATOLOGIE ─────────────────────────────────────────
+function buildClimat(){
+  const cl = STATE.data.climat;
+  const tempM = avg(cl,'temperature').toFixed(1);
+  const precT = Math.round(sum(cl,'precipitation'));
+  const evapM = avg(cl,'evaporation').toFixed(1);
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🌡️','Temp. moy. annuelle',tempM,'°C','#e74c3c','')}
+    ${kpiCard('🌧️','Précipitations totales',precT,'mm/an','#3498db','')}
+    ${kpiCard('💨','Évaporation moyenne',evapM,'mm/j','#f39c12','')}
+    ${kpiCard('☀️','Jours de sécheresse','47','j/an','#e67e22','')}
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    ${sectionTitle('Données climatiques mensuelles','🌍')}
+    <div id="chart-climat" style="height:290px"></div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Données mensuelles détaillées','📋')}
+      <div style="overflow-x:auto">
+      <table class="data-table">
+        ${tableHead(['Mois','Temp. (°C)','Précip. (mm)','Évaporation (mm/j)'])}
+        <tbody>${cl.map(r=>`<tr>
+          <td>${MOIS_FR[r.mois-1]}</td>
+          <td>${fmtN(r.temperature,1)}</td>
+          <td>${fmtN(r.precipitation,1)}</td>
+          <td>${fmtN(r.evaporation,1)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Périodes favorables à l\'épandage','📅')}
+      <div class="periode-row ok-row"><strong>✅ Oct. – Nov.</strong><span style="margin-left:12px">Période optimale</span></div>
+      <div class="periode-row ok-row"><strong>✅ Mars – Avr.</strong><span style="margin-left:12px">Période optimale</span></div>
+      <div class="periode-row warn-row"><strong>⚠️ Déc. – Janv.</strong><span style="margin-left:12px">Risque de ruissellement</span></div>
+      <div class="periode-row bad-row"><strong>🚫 Juin – Août</strong><span style="margin-left:12px">Fortes chaleurs — odeurs</span></div>
+      <br/>
+      ${sectionTitle('Carte pluviométrique','🗺️')}
+      <div id="chart-pluvio" style="height:200px"></div>
+    </div>
+  </div>`;
+}
+
+// ── RECHERCHE ─────────────────────────────────────────────
+function buildRecherche(){
+  return `
+  <div class="kpi-row">
+    ${kpiCard('🔬','Sites pilotes','12','','#1a5276','')}
+    ${kpiCard('📚','Études en cours','8','','#2e86c1','')}
+    ${kpiCard('🌍','Séquestration CO₂','4 250','t/an','#27ae60','')}
+    ${kpiCard('♻️','Compostage','1 200','t/an','#f39c12','')}
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Cinétique de dégradation — Composés phénoliques','⚗️')}
+      <div id="chart-kinetique" style="height:280px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Heatmap — Taux de compostage optimal','🌡️')}
+      <div id="chart-heatmap" style="height:280px"></div>
+    </div>
+  </div>
+  <div class="grid-1-1">
+    <div class="card">
+      ${sectionTitle('Effet sur la fertilité des sols — Courbes de réponse','🌱')}
+      <div id="chart-fertilite" style="height:280px"></div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Bilan des expérimentations','📋')}
+      <table class="data-table">
+        ${tableHead(['Site pilote','Région','Type essai','Résultat','Statut'])}
+        <tbody>
+          ${[['SP-01','Sfax','Épandage','pH +0.3','✅ Concluant'],
+             ['SP-02','Sousse','Compostage','MO +1.2%','✅ Concluant'],
+             ['SP-03','Nabeul','Lagunage','DBO -78%','🔵 En cours'],
+             ['SP-04','Sfax','Bioénergie','12 kWh/m³','⏳ Analyse'],
+             ['SP-05','Gabès','Épandage','Rendement +15%','✅ Concluant'],
+             ['SP-06','Médenine','Compostage','N +0.8 g/kg','🔵 En cours'],
+             ['SP-07','Kairouan','Lagunage','Réduction phénols -82%','✅ Concluant'],
+             ['SP-08','Kasserine','Bioénergie','Méthane 68 L/kg','⏳ Analyse'],
+          ].map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ── IMPRESSION ────────────────────────────────────────────
+function buildImpression(){
+  const govs = [...new Set([
+    ...STATE.data.bassins,...STATE.data.huileries,
+    ...STATE.data.parcelles,...STATE.data.demandes
+  ].map(r=>r.gouvernorat))].sort();
+
+  const govChecks = ['Tous',...govs].map(g=>
+    `<label class="check-item"><input type="checkbox" class="gov-check" value="${g}" ${g==='Tous'?'checked':''}/> ${g}</label>`
+  ).join('');
+  const sections = ['bassins','huileries','sols','demandes','climatologie','recherche'];
+  const secLabels = {'bassins':'🛢️ Bassins','huileries':'🏭 Huileries','sols':'🌱 Sols & Parcelles',
+    'demandes':'📋 Demandes','climatologie':'🌦️ Climatologie','recherche':'🔬 Recherche'};
+  const secChecks = sections.map(s=>
+    `<label class="check-item"><input type="checkbox" class="sec-check" value="${s}" checked/> ${secLabels[s]}</label>`
+  ).join('');
+
+  return `
+  <div class="grid-1-1">
+    <div class="card">
+      <div class="print-section">
+        ${sectionTitle('Gouvernorat(s) à inclure','🏛️')}
+        <div class="check-group">${govChecks}</div>
+      </div>
+      <div class="print-section">
+        ${sectionTitle('Sections du rapport','📄')}
+        <div class="check-group">${secChecks}</div>
+      </div>
+      <div class="print-section">
+        ${sectionTitle('Nom du fichier PDF','📁')}
+        <input id="pdf-filename" type="text" value="rapport_margines_${new Date().toISOString().slice(0,10)}"
+          style="width:100%;padding:9px 12px;border:1.5px solid #d0d7de;border-radius:7px;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px"/>
+        <button class="btn-primary" style="width:100%;padding:13px;font-size:14px" onclick="generatePDF()">
+          🖨️ Générer et télécharger le rapport PDF
+        </button>
+        <div id="pdf-progress" style="display:none;margin-top:12px">
+          <div class="progress-bar-wrap"><div class="progress-bar" id="pdf-bar" style="width:0%"></div></div>
+          <div id="pdf-step" style="font-size:12px;color:#555;text-align:center;margin-top:4px">Préparation…</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      ${sectionTitle('Résumé du rapport','📋')}
+      <div id="print-summary" class="summary-box">
+        Sélectionnez les options à gauche pour visualiser le résumé du rapport.
+      </div>
+      <br/>
+      ${sectionTitle('Aperçu des statistiques clés','📊')}
+      <div id="chart-imp-preview" style="height:250px"></div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  CHARTS RENDERING
+// ══════════════════════════════════════════════════════════
+const layout0 = { paper_bgcolor:'#ffffff', plot_bgcolor:'#ffffff',
+  margin:{l:55,r:30,t:30,b:50}, font:{family:'IBM Plex Sans,sans-serif',size:11} };
+function L(extra={}){ return Object.assign({}, layout0, extra); }
+
+function renderCharts(tab){
+  const d = STATE.data;
+  const b = filterGov(d.bassins), h = filterGov(d.huileries),
+        p = filterGov(d.parcelles), dem = filterGov(d.demandes);
+  const cfg = {displayModeBar:false, responsive:true};
+  const ms = mapStyle();
+
+  if(tab==='bord'){
+    // Map bassins
+    const byStatus = {'Disponible':[],'Rempli >70%':[],'Saturé':[]};
+    b.forEach(x=>{ if(byStatus[x.statut]) byStatus[x.statut].push(x); });
+    const mapTraces = Object.entries(byStatus).map(([st,arr])=>({
+      type:'scattermapbox', lat:arr.map(x=>x.latitude), lon:arr.map(x=>x.longitude),
+      mode:'markers', name:st,
+      marker:{size:9,color:{Disponible:COLORS.disponible,'Rempli >70%':COLORS.rempli,Saturé:COLORS.sature}[st],opacity:.85},
+      text:arr.map(x=>`<b>${x.id}</b><br>${x.gouvernorat}<br>Remplissage: ${x.remplissage_pct}%`),
+      hovertemplate:'%{text}<extra></extra>',
+    }));
+    Plotly.newPlot('map-bord-bassins', mapTraces, L({
+      mapbox:{style:ms,center:{lat:34,lon:9.5},zoom:5.0,layers:getMapLayers()},
+      legend:{orientation:'h',y:0.02,x:0.5,xanchor:'center',bgcolor:'rgba(255,255,255,.85)'},
+      height:440, margin:{l:0,r:0,t:0,b:0}
+    }), cfg);
+
+    // Historique
+    const colors_h=['#3498db','#2ecc71','#e67e22','#9b59b6'];
+    const histTraces = [...new Set(d.historique.map(x=>x.annee))].sort().map((a,i)=>{
+      const rows = d.historique.filter(x=>x.annee===a).sort((a,b)=>a.mois-b.mois);
+      return {type:'scatter',x:rows.map(x=>x.mois),y:rows.map(x=>x.remplissage_moyen),
+        mode:'lines+markers',name:String(a),line:{color:colors_h[i%4],width:2.5},marker:{size:5}};
+    });
+    Plotly.newPlot('chart-historique', histTraces, L({
+      xaxis:{tickvals:[1,2,3,4,5,6,7,8,9,10,11,12],ticktext:MOIS_FR,title:{text:'Mois'}},
+      yaxis:{title:{text:'Taux moyen (%)'},range:[0,120]},
+      legend:{orientation:'h',y:-0.25,x:.5,xanchor:'center'}, height:300,
+      shapes:[
+        {type:'line',xref:'x',yref:'y',x0:1,x1:12,y0:70,y1:70,line:{color:COLORS.warning,width:1.5,dash:'dot'}},
+        {type:'line',xref:'x',yref:'y',x0:1,x1:12,y0:100,y1:100,line:{color:COLORS.sature,width:1.5,dash:'dash'}},
+      ]
+    }), cfg);
+
+    // Cap bar
+    const cats=['Rempli >70 %','Disponible','Saturé'];
+    const vals=[
+      b.filter(x=>x.statut==='Rempli >70%').reduce((s,r)=>s+r.volume_stocke,0)/1000,
+      b.filter(x=>x.statut==='Disponible').reduce((s,r)=>s+(r.capacite_m3-r.volume_stocke),0)/1000,
+      b.filter(x=>x.statut==='Saturé').reduce((s,r)=>s+r.volume_stocke,0)/1000,
+    ];
+    Plotly.newPlot('chart-cap-bar',[{type:'bar',x:cats,y:vals,
+      marker:{color:[COLORS.rempli,COLORS.disponible,COLORS.sature]},
+      text:vals.map(v=>`${v.toFixed(0)} k m³`),textposition:'outside',cliponaxis:false}],
+      L({height:220,showlegend:false,margin:{l:55,r:20,t:40,b:50},
+        yaxis:{title:{text:'Volume (×1000 m³)'},rangemode:'tozero'}}), cfg);
+
+    // Prod gov
+    const prodByGov={};
+    h.forEach(x=>{ prodByGov[x.gouvernorat]=(prodByGov[x.gouvernorat]||0)+x.margines_produites_m3; });
+    const sorted=Object.entries(prodByGov).sort((a,b)=>a[1]-b[1]).slice(-10);
+    Plotly.newPlot('chart-prod-gov',[{type:'bar',orientation:'h',
+      x:sorted.map(x=>x[1]),y:sorted.map(x=>x[0]),
+      marker:{color:sorted.map(x=>x[1]),colorscale:'Blues',showscale:false},
+      text:sorted.map(x=>`${Math.round(x[1]).toLocaleString('fr-FR')} m³`),textposition:'outside',cliponaxis:false}],
+      L({height:320,margin:{l:20,r:70,t:15,b:50},
+        xaxis:{title:{text:'Volume margines (m³)'},rangemode:'tozero'},
+        yaxis:{title:{text:'Gouvernorat'}}}), cfg);
+
+    // Donut demandes
+    const demCounts={};
+    dem.forEach(d=>{ demCounts[d.statut]=(demCounts[d.statut]||0)+1; });
+    Plotly.newPlot('chart-donut-dem',[{type:'pie',labels:Object.keys(demCounts),
+      values:Object.values(demCounts),hole:.55,
+      marker:{colors:[COLORS.accent,COLORS.warning,COLORS.sature,COLORS.secondary]},
+      textinfo:'label+percent',textfont:{size:11}}],
+      L({height:260,showlegend:false,margin:{l:10,r:10,t:20,b:20},
+        annotations:[{text:`<b>${dem.length}</b><br>demandes`,x:.5,y:.5,showarrow:false,
+          font:{size:12,color:COLORS.primary},xanchor:'center'}]}), cfg);
+  }
+
+  if(tab==='bassins'){
+    // Map
+    const byStatus2 = {'Disponible':[],'Rempli >70%':[],'Saturé':[]};
+    b.forEach(x=>{ if(byStatus2[x.statut]) byStatus2[x.statut].push(x); });
+    Plotly.newPlot('map-bassins', Object.entries(byStatus2).map(([st,arr])=>({
+      type:'scattermapbox', lat:arr.map(x=>x.latitude), lon:arr.map(x=>x.longitude), mode:'markers',
+      name:st, marker:{size:9,color:{Disponible:COLORS.disponible,'Rempli >70%':COLORS.rempli,Saturé:COLORS.sature}[st],opacity:.85},
+      text:arr.map(x=>`<b>${x.id}</b><br>${x.gouvernorat}<br>Remplissage: ${x.remplissage_pct}%`),
+      hovertemplate:'%{text}<extra></extra>',
+    })), L({mapbox:{style:ms,center:{lat:34,lon:9.5},zoom:5.0,layers:getMapLayers()},
+      legend:{orientation:'h',y:0.02,x:.5,xanchor:'center',bgcolor:'rgba(255,255,255,.85)'},
+      height:480,margin:{l:0,r:0,t:0,b:0}}), cfg);
+    // Historique
+    const colors_h2=['#3498db','#2ecc71','#e67e22','#9b59b6'];
+    Plotly.newPlot('chart-bass-hist',
+      [...new Set(d.historique.map(x=>x.annee))].sort().map((a,i)=>{
+        const rows=d.historique.filter(x=>x.annee===a).sort((a,b)=>a.mois-b.mois);
+        return {type:'scatter',x:rows.map(x=>x.mois),y:rows.map(x=>x.remplissage_moyen),
+          mode:'lines+markers',name:String(a),line:{color:colors_h2[i%4],width:2.5},marker:{size:5}};
+      }),
+      L({xaxis:{tickvals:[1,2,3,4,5,6,7,8,9,10,11,12],ticktext:MOIS_FR},
+        yaxis:{range:[0,120],title:{text:'Taux (%)'}},height:300,
+        legend:{orientation:'h',y:-0.25,x:.5,xanchor:'center'}}), cfg);
+    // Bar
+    const vals2=['Rempli >70%','Disponible','Saturé'].map(s=>
+      b.filter(x=>x.statut===s).reduce((t,r)=>t+r.volume_stocke,0)/1000);
+    Plotly.newPlot('chart-bass-bar',[{type:'bar',x:['Rempli >70%','Disponible','Saturé'],y:vals2,
+      marker:{color:[COLORS.rempli,COLORS.disponible,COLORS.sature]},
+      text:vals2.map(v=>`${v.toFixed(0)} k m³`),textposition:'outside',cliponaxis:false}],
+      L({height:220,showlegend:false,yaxis:{rangemode:'tozero',title:{text:'Volume k m³'}}}), cfg);
+  }
+
+  if(tab==='huileries'){
+    // Map
+    const byStatH={'Actif':[],'Inactif':[],'En maintenance':[]};
+    h.forEach(x=>{ if(byStatH[x.statut]) byStatH[x.statut].push(x); });
+    Plotly.newPlot('map-huileries', Object.entries(byStatH).map(([st,arr])=>({
+      type:'scattermapbox',lat:arr.map(x=>x.latitude),lon:arr.map(x=>x.longitude),mode:'markers',name:st,
+      marker:{size:8,color:{Actif:COLORS.disponible,Inactif:'#95a5a6','En maintenance':COLORS.warning}[st],opacity:.9},
+      text:arr.map(x=>`<b>${x.nom}</b><br>Type: ${x.type_systeme}<br>Margines: ${fmt(x.margines_produites_m3)} m³`),
+      hovertemplate:'%{text}<extra></extra>',
+    })), L({mapbox:{style:ms,center:{lat:34.5,lon:9.5},zoom:5.2,layers:getMapLayers()},height:420,margin:{l:0,r:0,t:0,b:0},
+      legend:{orientation:'h',y:0.02,bgcolor:'rgba(255,255,255,.85)'}}), cfg);
+    // Prod by gov
+    const pg={};
+    h.forEach(x=>{ pg[x.gouvernorat]=(pg[x.gouvernorat]||0)+x.margines_produites_m3; });
+    const srt=Object.entries(pg).sort((a,b)=>a[1]-b[1]).slice(-10);
+    Plotly.newPlot('chart-prod-gov-hui',[{type:'bar',orientation:'h',
+      x:srt.map(x=>x[1]),y:srt.map(x=>x[0]),
+      marker:{color:srt.map(x=>x[1]),colorscale:'Blues',showscale:false},
+      text:srt.map(x=>`${Math.round(x[1]).toLocaleString('fr-FR')} m³`),textposition:'outside',cliponaxis:false}],
+      L({height:350,margin:{l:20,r:80,t:15,b:50},
+        xaxis:{title:{text:'Volume (m³)'},rangemode:'tozero'}}), cfg);
+    // Donut type
+    const tc={};
+    h.forEach(x=>{ tc[x.type_systeme]=(tc[x.type_systeme]||0)+1; });
+    Plotly.newPlot('chart-type-hui',[{type:'pie',labels:Object.keys(tc),values:Object.values(tc),hole:.42,
+      marker:{colors:[COLORS.primary,COLORS.secondary,COLORS.accent]},
+      textinfo:'label+percent',textfont:{size:11}}],
+      L({height:260,showlegend:false,margin:{l:20,r:20,t:20,b:30},
+        annotations:[{text:`<b>${h.length}</b><br>huileries`,x:.5,y:.5,showarrow:false,
+          font:{size:12,color:COLORS.primary}}]}), cfg);
+  }
+
+  if(tab==='sols'){
+    // Map parcelles
+    Plotly.newPlot('map-parcelles',[{
+      type:'scattermapbox',lat:p.map(x=>x.latitude),lon:p.map(x=>x.longitude),mode:'markers',
+      marker:{size:10,color:p.map(x=>x.matiere_organique_pct),colorscale:'YlGn',showscale:true,
+        colorbar:{title:{text:'MO %'},thickness:12,len:.6}},
+      text:p.map(x=>`<b>${x.id}</b><br>${x.gouvernorat}<br>Superficie: ${x.superficie_ha} ha<br>MO: ${x.matiere_organique_pct}%<br>pH: ${x.ph_sol}`),
+      hovertemplate:'%{text}<extra></extra>',
+    }], L({mapbox:{style:ms,center:{lat:35,lon:9.8},zoom:4.8,layers:getMapLayers()},height:380,margin:{l:0,r:0,t:0,b:0}}), cfg);
+    // Radar
+    const cats=['<b>pH</b>','<b>Matière<br>organique</b>','<b>Activité<br>microbienne</b>',
+      '<b>Carbone<br>organique</b>','<b>Fertilité</b>','<b>pH</b>'];
+    Plotly.newPlot('chart-sol-radar',[
+      {type:'scatterpolar',r:[72,68,78,65,70,72],theta:cats,fill:'toself',name:'Après',
+        line:{color:'#2ecc71',width:2},fillcolor:'rgba(46,204,113,.3)'},
+      {type:'scatterpolar',r:[40,35,30,28,33,40],theta:cats,fill:'toself',name:'Avant',
+        line:{color:'#e74c3c',width:2},fillcolor:'rgba(231,76,60,.5)'},
+    ], L({polar:{bgcolor:'rgba(0,0,0,0)',radialaxis:{visible:true,range:[0,100]}},
+      height:350,margin:{l:80,r:80,t:50,b:60},showlegend:true,
+      legend:{orientation:'h',y:-0.2,x:.5,xanchor:'center'}}), cfg);
+    // pH hist
+    Plotly.newPlot('chart-ph-hist',[{type:'histogram',x:p.map(x=>x.ph_sol),nbinsx:15,
+      marker:{color:COLORS.secondary,opacity:.8}}],
+      L({height:250,xaxis:{title:{text:'pH du sol'},range:[4,10]},
+        yaxis:{title:{text:'Parcelles'},rangemode:'tozero'},showlegend:false}), cfg);
+    // MO hist
+    Plotly.newPlot('chart-mo-hist',[{type:'histogram',x:p.map(x=>x.matiere_organique_pct),nbinsx:15,
+      marker:{color:COLORS.accent,opacity:.8}}],
+      L({height:250,xaxis:{title:{text:'Matière organique (%)'}},
+        yaxis:{title:{text:'Parcelles'},rangemode:'tozero'},showlegend:false}), cfg);
+    // Mic pie
+    const mc={};
+    p.forEach(x=>{ mc[x.activite_microbienne]=(mc[x.activite_microbienne]||0)+1; });
+    Plotly.newPlot('chart-mic-pie',[{type:'pie',labels:Object.keys(mc),values:Object.values(mc),hole:.45,
+      marker:{colors:[COLORS.accent,COLORS.warning,COLORS.sature]},textinfo:'label+percent',textfont:{size:11}}],
+      L({height:250,showlegend:false,margin:{l:10,r:10,t:20,b:20}}), cfg);
+  }
+
+  if(tab==='epandage'){
+    const sc={}, tc2={};
+    dem.forEach(d=>{ sc[d.statut]=(sc[d.statut]||0)+1; tc2[d.type_epandage]=(tc2[d.type_epandage]||0)+1; });
+    Plotly.newPlot('chart-dem-statut',[{type:'pie',labels:Object.keys(sc),values:Object.values(sc),hole:.5,
+      marker:{colors:[COLORS.accent,COLORS.warning,COLORS.sature,COLORS.secondary]},
+      textinfo:'label+percent',textfont:{size:11}}],
+      L({height:300,showlegend:true,legend:{orientation:'h',y:-0.1},
+        margin:{l:10,r:10,t:20,b:30},
+        annotations:[{text:`<b>${dem.length}</b><br>demandes`,x:.5,y:.5,showarrow:false,
+          font:{size:13,color:COLORS.primary}}]}), cfg);
+    Plotly.newPlot('chart-dem-type',[{type:'pie',labels:Object.keys(tc2),values:Object.values(tc2),hole:.4,
+      marker:{colors:['#3498db','#2ecc71','#e67e22','#9b59b6']},
+      textinfo:'label+percent',textfont:{size:11}}],
+      L({height:300,showlegend:false,margin:{l:10,r:10,t:20,b:20}}), cfg);
+  }
+
+  if(tab==='climat'){
+    const cl = d.climat;
+    Plotly.newPlot('chart-climat',[
+      {type:'bar',x:cl.map(x=>x.mois),y:cl.map(x=>x.precipitation),name:'Précipitations (mm)',
+        marker:{color:'#85c1e9'},yaxis:'y'},
+      {type:'scatter',x:cl.map(x=>x.mois),y:cl.map(x=>x.temperature),name:'Température (°C)',
+        line:{color:'#e74c3c',width:2.5},mode:'lines+markers',marker:{size:5},yaxis:'y2'},
+      {type:'scatter',x:cl.map(x=>x.mois),y:cl.map(x=>x.evaporation),name:'Évaporation (mm/j)',
+        line:{color:'#f39c12',width:2,dash:'dot'},mode:'lines',yaxis:'y2'},
+    ], L({height:290,
+      xaxis:{tickvals:cl.map(x=>x.mois),ticktext:MOIS_FR,title:{text:'Mois'}},
+      yaxis:{title:{text:'Précipitations (mm)'},side:'left',rangemode:'tozero'},
+      yaxis2:{title:{text:'Température / Évaporation'},overlaying:'y',side:'right',showgrid:false},
+      legend:{orientation:'h',y:-0.30,x:.5,xanchor:'center'},margin:{l:65,r:70,t:15,b:80}}), cfg);
+
+    // Pluvio bar
+    Plotly.newPlot('chart-pluvio',[{type:'bar',x:cl.map(x=>MOIS_FR[x.mois-1]),
+      y:cl.map(x=>x.precipitation),marker:{color:'#3498db',opacity:.8}}],
+      L({height:200,showlegend:false,margin:{l:40,r:10,t:10,b:50},
+        yaxis:{title:{text:'mm'},rangemode:'tozero'}}), cfg);
+  }
+
+  if(tab==='recherche'){
+    // Cinétique
+    const t_vals=[...Array(13)].map((_,i)=>i*10);
+    Plotly.newPlot('chart-kinetique',[
+      {type:'scatter',x:t_vals,y:t_vals.map(t=>8500*Math.exp(-0.025*t)),
+        mode:'lines+markers',name:'Composés phénoliques (mg/kg)',line:{color:COLORS.sature,width:2}},
+      {type:'scatter',x:t_vals,y:t_vals.map(t=>12+18*(1-Math.exp(-0.03*t))),
+        mode:'lines+markers',name:'MO stable (%)',line:{color:COLORS.accent,width:2},yaxis:'y2'},
+    ], L({height:280,
+      xaxis:{title:{text:'Jours de compostage'}},
+      yaxis:{title:{text:'Composés phénoliques (mg/kg)'},rangemode:'tozero'},
+      yaxis2:{title:{text:'MO stable (%)'},overlaying:'y',side:'right',range:[0,35]},
+      legend:{orientation:'h',y:-0.3,x:.5,xanchor:'center'},margin:{l:70,r:70,t:15,b:80}}), cfg);
+
+    // Heatmap
+    const hum=[10,20,30,40,50,60,70,80,90];
+    const temps=[10,15,20,25,30,35,40];
+    Plotly.newPlot('chart-heatmap',[{type:'heatmap',
+      z:temps.map(t=>hum.map(h=>+(0.2*t*(0.5+h*0.01)).toFixed(2))),
+      x:hum.map(h=>`${h}%`),y:temps.map(t=>`${t}°C`),
+      colorscale:'Blues',showscale:true}],
+      L({height:280,xaxis:{title:{text:'Humidité'}},yaxis:{title:{text:'Température'}},
+        margin:{l:55,r:10,t:20,b:50}}), cfg);
+
+    // Fertilité
+    const doses=[0,20,50,80,100,130,150];
+    Plotly.newPlot('chart-fertilite',[
+      {type:'scatter',x:doses,y:doses.map(d=>100+d*0.8-d*d*0.002),mode:'lines+markers',
+        name:'Blé (q/ha)',line:{color:COLORS.secondary,width:2.5},marker:{size:5}},
+      {type:'scatter',x:doses,y:doses.map(d=>60+d*0.5-d*d*0.0015),mode:'lines+markers',
+        name:'Orge (q/ha)',line:{color:COLORS.accent,width:2.5},marker:{size:5}},
+    ], L({height:280,xaxis:{title:{text:'Dose margines (m³/ha)'}},
+      yaxis:{title:{text:'Rendement (q/ha)'},rangemode:'tozero'},
+      legend:{orientation:'h',y:-0.25},margin:{l:55,r:20,t:15,b:70}}), cfg);
+  }
+
+  if(tab==='impression'){
+    // Preview chart
+    const govCounts={};
+    [...d.bassins,...d.huileries].forEach(r=>{ govCounts[r.gouvernorat]=(govCounts[r.gouvernorat]||0)+1; });
+    const top8=Object.entries(govCounts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    Plotly.newPlot('chart-imp-preview',[{type:'bar',x:top8.map(x=>x[0]),y:top8.map(x=>x[1]),
+      marker:{color:top8.map(x=>x[1]),colorscale:'Blues',showscale:false},
+      text:top8.map(x=>x[1]),textposition:'outside',cliponaxis:false}],
+      L({height:250,showlegend:false,margin:{l:30,r:10,t:20,b:80},
+        xaxis:{title:{text:'Gouvernorat'},tickangle:-35},
+        yaxis:{title:{text:'Entités'},rangemode:'tozero'}}), cfg);
+
+    updatePrintSummary();
+    document.querySelectorAll('.gov-check,.sec-check').forEach(el=>{
+      el.addEventListener('change', updatePrintSummary);
+    });
+  }
+}
+
+function updatePrintSummary(){
+  const govChecked=[...document.querySelectorAll('.gov-check:checked')].map(x=>x.value);
+  const secChecked=[...document.querySelectorAll('.sec-check:checked')].map(x=>x.value);
+  const fname=(document.getElementById('pdf-filename')?.value||'rapport')+'.pdf';
+  const govTxt=govChecked.includes('Tous')?'Tous les gouvernorats':govChecked.join(', ')||'Aucun';
+  const secLabels={'bassins':'Bassins','huileries':'Huileries','sols':'Sols','demandes':'Demandes',
+    'climatologie':'Climatologie','recherche':'Recherche'};
+  const secTxt=secChecked.map(s=>secLabels[s]||s).join(', ')||'Aucune';
+  const el=document.getElementById('print-summary');
+  if(el) el.innerHTML=`
+    <div>📍 <b>Gouvernorat(s) :</b> ${govTxt}</div>
+    <div>📄 <b>Sections :</b> ${secTxt}</div>
+    <div>💾 <b>Fichier :</b> ${fname}</div>
+    <div>📅 <b>Date :</b> ${new Date().toLocaleDateString('fr-FR')}</div>
+    <div>👤 <b>Utilisateur :</b> ${STATE.user||'—'}</div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid #bcd;color:#666;font-size:11px;">
+      Le rapport contiendra ${secChecked.length} section(s) avec cartes et graphiques.
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  PDF GENERATION (jsPDF via CDN)
+// ══════════════════════════════════════════════════════════
+function generatePDF(){
+  const prog=document.getElementById('pdf-progress');
+  const bar=document.getElementById('pdf-bar');
+  const step=document.getElementById('pdf-step');
+  prog.style.display='block';
+
+  const govChecked=[...document.querySelectorAll('.gov-check:checked')].map(x=>x.value);
+  const secChecked=[...document.querySelectorAll('.sec-check:checked')].map(x=>x.value);
+  const fname=(document.getElementById('pdf-filename')?.value||'rapport_margines').replace(/\.pdf$/i,'');
+
+  const steps=[
+    [10,'Initialisation du rapport…'],
+    [25,'Génération des statistiques…'],
+    [50,'Création des tableaux…'],
+    [75,'Mise en page finale…'],
+    [95,'Génération du fichier…'],
+    [100,'Téléchargement…'],
+  ];
+
+  let i=0;
+  function next(){
+    if(i>=steps.length){ finalizeDownload(fname, govChecked, secChecked); return; }
+    const [pct,msg]=steps[i++];
+    bar.style.width=pct+'%'; step.textContent=msg;
+    setTimeout(next, 400);
+  }
+  next();
+}
+
+function finalizeDownload(fname, govs, secs){
+  // Build a styled HTML report and download as HTML (PDF generation without server)
+  const d = STATE.data;
+  const allGovs = govs.includes('Tous');
+  const filterFn = r => allGovs || govs.includes(r.gouvernorat);
+  const b = d.bassins.filter(filterFn);
+  const h = d.huileries.filter(filterFn);
+  const p = d.parcelles.filter(filterFn);
+  const dem = d.demandes.filter(filterFn);
+  const cl = d.climat;
+
+  const secLabels={'bassins':'🛢️ Bassins','huileries':'🏭 Huileries','sols':'🌱 Sols & Parcelles',
+    'demandes':'📋 Demandes','climatologie':'🌦️ Climatologie','recherche':'🔬 Recherche'};
+
+  let html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/>
+  <title>Rapport SMART-MARGINES</title>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1c2833;margin:0;padding:20px;background:#f0f3f7;}
+    h1{color:#1a5276;font-size:20px;margin:0} h2{color:#1a5276;font-size:15px;border-left:4px solid #2e86c1;padding-left:10px;margin:18px 0 10px}
+    .header{background:linear-gradient(135deg,#1a5276,#2e86c1);color:white;padding:20px 28px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:16px}
+    .sub{opacity:.8;font-size:11px;margin-top:4px}
+    .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .kpi{background:white;border-radius:8px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-align:center}
+    .kpi .val{font-size:22px;font-weight:800;color:#1a5276}.kpi .lbl{font-size:10px;color:#7f8c8d;text-transform:uppercase;letter-spacing:.4px}
+    table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+    th{background:#1a5276;color:white;padding:7px 8px;text-align:left;font-weight:700}
+    td{padding:6px 8px;border-bottom:1px solid #ecf0f1}
+    tr:nth-child(even) td{background:#f7fafd}
+    .card{background:white;border-radius:10px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:16px}
+    .badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700}
+    .bg{background:#d5f5e3;color:#1e8449}.bo{background:#fef9e7;color:#b7770d}.br{background:#fde8e8;color:#c0392b}
+    .footer{text-align:center;color:#95a5a6;font-size:10px;margin-top:20px;padding-top:10px;border-top:1px solid #ecf0f1}
+    @media print{body{background:white}.header{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+  </style></head><body>
+  <div class="header">
+    <span style="font-size:40px">🫒</span>
+    <div><h1>SMART-MARGINES Tunisie</h1>
+    <div class="sub">Rapport généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</div>
+    <div class="sub">Utilisateur : ${STATE.user} | Gouvernorat(s) : ${govs.includes('Tous')?'Tous':govs.join(', ')}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${b.length}</div><div class="lbl">Bassins</div></div>
+      <div class="kpi"><div class="val">${h.length}</div><div class="lbl">Huileries</div></div>
+      <div class="kpi"><div class="val">${p.length}</div><div class="lbl">Parcelles</div></div>
+      <div class="kpi"><div class="val">${dem.length}</div><div class="lbl">Demandes</div></div>
+    </div>
+  </div>`;
+
+  if(secs.includes('bassins')){
+    html+=`<div class="card"><h2>Bassins de stockage</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${b.filter(x=>x.statut==='Disponible').length}</div><div class="lbl">Disponibles</div></div>
+      <div class="kpi"><div class="val">${b.filter(x=>x.statut==='Rempli >70%').length}</div><div class="lbl">Remplis &gt;70%</div></div>
+      <div class="kpi"><div class="val">${b.filter(x=>x.statut==='Saturé').length}</div><div class="lbl">Saturés</div></div>
+      <div class="kpi"><div class="val">${(sum(b,'capacite_m3')/1000).toFixed(0)} k</div><div class="lbl">Capacité m³</div></div>
+    </div>
+    <table><thead><tr><th>ID</th><th>Gouvernorat</th><th>Capacité m³</th><th>Volume stocké</th><th>Remplissage %</th><th>Statut</th></tr></thead>
+    <tbody>${b.slice(0,25).map(r=>`<tr><td>${r.id}</td><td>${r.gouvernorat}</td><td>${fmt(r.capacite_m3)}</td><td>${fmt(r.volume_stocke)}</td><td>${r.remplissage_pct}%</td>
+    <td><span class="badge ${r.statut==='Disponible'?'bg':r.statut==='Saturé'?'br':'bo'}">${r.statut}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+
+  if(secs.includes('huileries')){
+    html+=`<div class="card"><h2>Huileries</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${h.filter(x=>x.statut==='Actif').length}</div><div class="lbl">Actives</div></div>
+      <div class="kpi"><div class="val">${(sum(h,'olives_triturées_t')/1000).toFixed(0)} k</div><div class="lbl">Olives (t)</div></div>
+      <div class="kpi"><div class="val">${(sum(h,'margines_produites_m3')/1000).toFixed(0)} k</div><div class="lbl">Margines m³</div></div>
+      <div class="kpi"><div class="val">${avg(h,'rendement_pct').toFixed(1)}%</div><div class="lbl">Rendement moy.</div></div>
+    </div>
+    <table><thead><tr><th>Nom</th><th>Gouvernorat</th><th>Type</th><th>Capacité t/j</th><th>Margines m³</th><th>Statut</th></tr></thead>
+    <tbody>${h.slice(0,20).map(r=>`<tr><td>${r.nom}</td><td>${r.gouvernorat}</td><td>${r.type_systeme}</td>
+    <td>${r.capacite_t_jour}</td><td>${fmt(r.margines_produites_m3)}</td>
+    <td><span class="badge ${r.statut==='Actif'?'bg':r.statut==='Inactif'?'':'bo'}">${r.statut}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+
+  if(secs.includes('sols')){
+    html+=`<div class="card"><h2>Sols & Parcelles amendées</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${p.length}</div><div class="lbl">Parcelles</div></div>
+      <div class="kpi"><div class="val">${sum(p,'superficie_ha').toFixed(0)}</div><div class="lbl">Surface Ha</div></div>
+      <div class="kpi"><div class="val">${avg(p,'ph_sol').toFixed(1)}</div><div class="lbl">pH moyen</div></div>
+      <div class="kpi"><div class="val">${avg(p,'matiere_organique_pct').toFixed(2)}%</div><div class="lbl">MO moyenne</div></div>
+    </div>
+    <table><thead><tr><th>ID</th><th>Gouvernorat</th><th>Surface Ha</th><th>MO %</th><th>pH</th><th>Activité microbienne</th></tr></thead>
+    <tbody>${p.slice(0,20).map(r=>`<tr><td>${r.id}</td><td>${r.gouvernorat}</td><td>${r.superficie_ha}</td>
+    <td>${r.matiere_organique_pct}</td><td>${r.ph_sol}</td>
+    <td><span class="badge ${r.activite_microbienne==='Élevée'?'bg':r.activite_microbienne==='Faible'?'br':'bo'}">${r.activite_microbienne}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+
+  if(secs.includes('demandes')){
+    html+=`<div class="card"><h2>Demandes d'épandage</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${dem.length}</div><div class="lbl">Total</div></div>
+      <div class="kpi"><div class="val">${dem.filter(x=>x.statut==='Approuvé').length}</div><div class="lbl">Approuvées</div></div>
+      <div class="kpi"><div class="val">${dem.filter(x=>x.statut==='En attente').length}</div><div class="lbl">En attente</div></div>
+      <div class="kpi"><div class="val">${(sum(dem,'quantite_demandee_m3')/1000).toFixed(0)} k</div><div class="lbl">Volume dem. m³</div></div>
+    </div>
+    <table><thead><tr><th>ID</th><th>Gouvernorat</th><th>Type</th><th>Quantité m³</th><th>Surface Ha</th><th>Date</th><th>Statut</th></tr></thead>
+    <tbody>${dem.slice(0,20).map(r=>`<tr><td>${r.id}</td><td>${r.gouvernorat}</td><td>${r.type_epandage}</td>
+    <td>${fmt(r.quantite_demandee_m3)}</td><td>${r.superficie_ha}</td><td>${r.date_demande}</td>
+    <td><span class="badge ${r.statut==='Approuvé'?'bg':r.statut==='Refusé'?'br':'bo'}">${r.statut}</span></td></tr>`).join('')}
+    </tbody></table></div>`;
+  }
+
+  if(secs.includes('climatologie')){
+    html+=`<div class="card"><h2>Climatologie</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${avg(cl,'temperature').toFixed(1)}°C</div><div class="lbl">Temp. moy.</div></div>
+      <div class="kpi"><div class="val">${Math.round(sum(cl,'precipitation'))} mm</div><div class="lbl">Précip. annuelles</div></div>
+      <div class="kpi"><div class="val">${avg(cl,'evaporation').toFixed(1)}</div><div class="lbl">Évaporation mm/j</div></div>
+      <div class="kpi"><div class="val">47</div><div class="lbl">Jours sécheresse</div></div>
+    </div>
+    <table><thead><tr><th>Mois</th><th>Température (°C)</th><th>Précipitations (mm)</th><th>Évaporation (mm/j)</th></tr></thead>
+    <tbody>${cl.map(r=>`<tr><td>${MOIS_FR[r.mois-1]}</td><td>${r.temperature.toFixed(1)}</td><td>${r.precipitation.toFixed(1)}</td><td>${r.evaporation.toFixed(1)}</td></tr>`).join('')}
+    </tbody></table>
+    <br/><h2>Périodes favorables à l'épandage</h2>
+    <table><thead><tr><th>Statut</th><th>Période</th><th>Recommandation</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge bg">✅ OK</span></td><td>Octobre – Novembre</td><td>Période optimale</td></tr>
+      <tr><td><span class="badge bg">✅ OK</span></td><td>Mars – Avril</td><td>Période optimale</td></tr>
+      <tr><td><span class="badge bo">⚠️ Attention</span></td><td>Décembre – Janvier</td><td>Risque de ruissellement</td></tr>
+      <tr><td><span class="badge br">🚫 Interdit</span></td><td>Juin – Août</td><td>Fortes chaleurs — odeurs</td></tr>
+    </tbody></table>
+    </div>`;
+  }
+
+  if(secs.includes('recherche')){
+    html+=`<div class="card"><h2>Données de recherche & Sites pilotes</h2>
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">12</div><div class="lbl">Sites pilotes</div></div>
+      <div class="kpi"><div class="val">8</div><div class="lbl">Études en cours</div></div>
+      <div class="kpi"><div class="val">4 250 t/an</div><div class="lbl">Séquestration CO₂</div></div>
+      <div class="kpi"><div class="val">1 200 t/an</div><div class="lbl">Compostage</div></div>
+    </div>
+    <table><thead><tr><th>Site pilote</th><th>Région</th><th>Type essai</th><th>Résultat</th><th>Statut</th></tr></thead>
+    <tbody>
+      <tr><td>SP-01</td><td>Sfax</td><td>Épandage</td><td>pH +0.3</td><td><span class="badge bg">✅ Concluant</span></td></tr>
+      <tr><td>SP-02</td><td>Sousse</td><td>Compostage</td><td>MO +1.2%</td><td><span class="badge bg">✅ Concluant</span></td></tr>
+      <tr><td>SP-03</td><td>Nabeul</td><td>Lagunage</td><td>DBO -78%</td><td><span class="badge bo">🔵 En cours</span></td></tr>
+      <tr><td>SP-04</td><td>Sfax</td><td>Bioénergie</td><td>12 kWh/m³</td><td><span class="badge bo">⏳ Analyse</span></td></tr>
+    </tbody></table>
+    </div>`;
+  }
+
+  html+=`<div class="footer">© 2026  — Mounir SELLAMI, mounir_sellami@yahoo.fr, WhatsApp : +216 22 723 486 | SMART-MARGINES Tunisie v5.0 Web<br>
+  Généré par ${STATE.user} le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}</div>
+  </body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname+'.html'; a.click();
+  URL.revokeObjectURL(url);
+
+  setTimeout(()=>{
+    document.getElementById('pdf-progress').style.display='none';
+  }, 1000);
+}
+</script>
+</body>
+</html>
